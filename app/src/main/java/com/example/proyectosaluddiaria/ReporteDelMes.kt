@@ -1,5 +1,6 @@
 package com.example.proyectosaluddiaria
 
+
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -19,6 +20,7 @@ import com.itextpdf.text.*
 import com.itextpdf.text.pdf.PdfPCell
 import com.itextpdf.text.pdf.PdfPTable
 import com.itextpdf.text.pdf.PdfWriter
+import android.Manifest
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -55,19 +57,43 @@ class ReporteDelMes : AppCompatActivity() {
             rvReporte.layoutManager = LinearLayoutManager(this)
 
 
-        val btncancelar: Button = findViewById(R.id.btnCancelar3)
+        val btncancelar: Button = findViewById(R.id.btnCancelar4)
         btncancelar.setOnClickListener {
             //log.w("boton," "A pantalla")
+
             val intent1 = Intent(this,MainActivity::class.java)
             startActivity(intent1)
         }
     }
+
+    override fun onStart() {
+        super.onStart()
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
+            PackageManager.PERMISSION_DENIED || checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) ==
+            PackageManager.PERMISSION_DENIED
+        ) {
+            val permission = arrayOf(
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            )
+            requestPermissions(permission, 101)
+
+            }
+
+    }
     private fun crearPDF() {
+
         try {
             val carpeta = "/archivospdf"
-            val path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + carpeta
+            val path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath
 
-            val dir = File(path)
+            val dirDownload = File(path)
+            if (!dirDownload.exists()) {
+                dirDownload.mkdirs()
+                Toast.makeText(this, "CARPETA CREADA", Toast.LENGTH_SHORT).show()
+            }
+
+            val dir = File(path + carpeta)
             if (!dir.exists()) {
                 dir.mkdirs()
                 Toast.makeText(this, "CARPETA CREADA", Toast.LENGTH_SHORT).show()
@@ -120,7 +146,7 @@ class ReporteDelMes : AppCompatActivity() {
 
             documento.add(tabla)
             documento.close()
-
+            Toast.makeText(this, "PDF creado en ${file.absolutePath}", Toast.LENGTH_LONG).show()
 
         } catch (e: FileNotFoundException) {
             e.printStackTrace();

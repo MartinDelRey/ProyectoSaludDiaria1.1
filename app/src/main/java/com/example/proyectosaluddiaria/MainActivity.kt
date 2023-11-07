@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
         val btnReporte: Button = findViewById(R.id.btnReportedelMes)
 
          btnAnt.setOnClickListener {
-             val intent1 = Intent(this,Antecedentes::class.java)
+             val intent1 = Intent(this, Antecedentes::class.java)
              startActivity(intent1)
          }
         btnRegistrar.setOnClickListener {

@@ -39,6 +39,8 @@ android {
 
 dependencies {
     implementation("com.itextpdf:itextg:5.5.10")
+
+
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.8.0")
