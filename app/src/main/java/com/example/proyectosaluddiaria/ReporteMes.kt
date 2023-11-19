@@ -3,6 +3,7 @@ package com.example.proyectosaluddiaria
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.io.Serializable
 
 @Entity
 data class ReporteMes(
@@ -11,4 +12,4 @@ data class ReporteMes(
     @ColumnInfo(name = "tiempoejerc") val tiempoejerc:String,
     @ColumnInfo(name = "cintura") val cintura:String,
     @ColumnInfo(name = "horassueno") val horassueno:String
-)
+) : Serializable

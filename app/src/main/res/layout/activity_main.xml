@@ -5,14 +5,31 @@
     android:id="@+id/onc"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+
+tools:context=".MainActivity">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/fondo"
+        android:gravity="top|center"
+        android:scaleType="centerCrop"
+        android:scaleX="1"
+        android:scaleY="1">
+
+    </ImageView>
+
 
     <TextView
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Salud Diaria"
-        android:textSize="34sp"
+        android:textSize="70sp"
+        android:textColor="#000000"
+
+        android:textStyle="bold"
+        android:fontFamily="cursive"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -21,31 +38,38 @@
 
     <Button
         android:id="@+id/btnAntecedentes"
-        android:layout_width="151dp"
-        android:layout_height="48dp"
+        android:layout_width="202dp"
+        android:layout_height="60dp"
         android:layout_marginTop="80dp"
         android:text="Antecedentes"
+        android:textColor="#FFFFFF"
+        android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.503"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView" />
 
+    
     <Button
         android:id="@+id/btnRegistrarHoy"
-        android:layout_width="151dp"
-        android:layout_height="45dp"
-        android:layout_marginTop="30dp"
+        android:layout_width="202dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="35dp"
         android:text="Registrar Hoy"
+        android:textSize="24sp"
+        android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnAntecedentes" />
 
     <Button
         android:id="@+id/btnReportedelMes"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
+        android:layout_width="202dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="35dp"
         android:text="Reporte  de Mes"
+        android:textSize="20sp"
+        android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.505"
         app:layout_constraintStart_toStartOf="parent"

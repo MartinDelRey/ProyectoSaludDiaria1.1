@@ -21,16 +21,24 @@ import com.itextpdf.text.pdf.PdfPCell
 import com.itextpdf.text.pdf.PdfPTable
 import com.itextpdf.text.pdf.PdfWriter
 import android.Manifest
+import android.app.Activity
+import android.net.Uri
+import android.os.ParcelFileDescriptor
+import android.util.Log
+import androidx.activity.result.ActivityResultLauncher
+import androidx.core.content.FileProvider
+import androidx.documentfile.provider.DocumentFile
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
+import java.util.Objects
 
 class ReporteDelMes : AppCompatActivity() {
 
 
     lateinit var binding: ActivityReporteDelMesBinding
 
-    var listaReporteDelMes: ArrayList<ReporteMes> = arrayListOf()
+    //var listaReporteDelMes: ArrayList<ReporteMes> = arrayListOf()
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -39,6 +47,11 @@ class ReporteDelMes : AppCompatActivity() {
         else Toast.makeText(this, "PERMISOS DENEGADOS", Toast.LENGTH_SHORT).show()
     }
     lateinit var rvReporte: RecyclerView
+    private lateinit var adaptador: Adaptador
+    private var listaReporteDelMes: List<ReporteMes> = emptyList()
+    private var launcher: ActivityResultLauncher<Intent>? = null
+    private var baseDocumentTreeUri: Uri? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityReporteDelMesBinding.inflate(layoutInflater)
@@ -47,7 +60,29 @@ class ReporteDelMes : AppCompatActivity() {
             verificarPermisos(it)
         }
         rvReporte = findViewById(R.id.rvReporte)
-        ActivityResultContracts.RequestPermission()
+
+        adaptador = Adaptador(this, this)
+        rvReporte.adapter = adaptador
+        rvReporte.layoutManager = LinearLayoutManager(this)
+
+        // Asigna la lista de reportes al adaptador
+        listaReporteDelMes = adaptador.registrarHoy
+
+        launcher = registerForActivityResult( ActivityResultContracts.StartActivityForResult()){
+            result->
+            run{
+                if (result.resultCode == Activity.RESULT_OK){
+                    baseDocumentTreeUri = Objects.requireNonNull(result.data)!!.data
+                    val takeFlags =
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    result.data!!.data?.let{
+                        this.getContentResolver().takePersistableUriPermission(it, takeFlags)
+
+                    }
+                }
+            }
+            crearPDF()
+        }
     }
 
         override fun onResume() {
@@ -84,22 +119,29 @@ class ReporteDelMes : AppCompatActivity() {
     private fun crearPDF() {
 
         try {
-            val carpeta = "/archivospdf"
-            val path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath
 
-            val dirDownload = File(path)
-            if (!dirDownload.exists()) {
-                dirDownload.mkdirs()
+
+            /*val carpeta = "/archivospdf"
+            val path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + carpeta
+
+            val dirr = File(path)
+            if (!dirr.exists()) {
+                dirr.mkdirs()
                 Toast.makeText(this, "CARPETA CREADA", Toast.LENGTH_SHORT).show()
             }
+
 
             val dir = File(path + carpeta)
             if (!dir.exists()) {
                 dir.mkdirs()
                 Toast.makeText(this, "CARPETA CREADA", Toast.LENGTH_SHORT).show()
-            }
-            val file = File(dir, "Reporte.pdf")
-            val fileOutputStream = FileOutputStream(file)
+            }*/
+
+            val directory = DocumentFile.fromTreeUri(this,baseDocumentTreeUri!!)
+            val file = directory!!.createFile("application/pdf", "Reporte.pdf")
+                    val pdf: ParcelFileDescriptor = this.getContentResolver().openFileDescriptor(file!!.uri, "w")!!
+            val fileOutputStream = FileOutputStream(pdf.fileDescriptor)
+
 
             val documento = Document()
             PdfWriter.getInstance(documento, fileOutputStream)
@@ -109,44 +151,60 @@ class ReporteDelMes : AppCompatActivity() {
             val titulo = Paragraph(
                 "Reporte Diario \n\n\n",
                 FontFactory.getFont("arial", 22f, Font.BOLD, BaseColor.BLUE)
+
             )
-
+            titulo.alignment = Element.ALIGN_CENTER
             documento.add(titulo)
+            val listaReportes = adaptador.registrarHoy
 
+            // Verificar que el registro no sea nulo
+            if (listaReportes.isNotEmpty()) {
             // Crear celdas y agregar contenido a cada una
-            val tabla = PdfPTable(5)
-            val celdaDia = PdfPCell(Phrase("DIA"))
-            val celdaPeso = PdfPCell(Phrase("PESO"))
-            val celdaTiempoEjercicio = PdfPCell(Phrase("TIEMPO DE EJERCICIO"))
-            val celdaCintura = PdfPCell(Phrase("CINTURA"))
-            val celdaHorasSueno = PdfPCell(Phrase("HORAS DE SUEÑO"))
+                val tabla = PdfPTable(5)
+                val celdaDia = PdfPCell(Phrase("DIA"))
+                val celdaPeso = PdfPCell(Phrase("PESO"))
+                val celdaTiempoEjercicio = PdfPCell(Phrase("TIEMPO DE EJERCICIO"))
+                val celdaCintura = PdfPCell(Phrase("CINTURA"))
+                val celdaHorasSueno = PdfPCell(Phrase("HORAS DE SUEÑO"))
 
-            tabla.addCell(celdaDia)
-            tabla.addCell(celdaPeso)
-            tabla.addCell(celdaTiempoEjercicio)
-            tabla.addCell(celdaCintura)
-            tabla.addCell(celdaHorasSueno)
+                tabla.addCell(celdaDia)
+                tabla.addCell(celdaPeso)
+                tabla.addCell(celdaTiempoEjercicio)
+                tabla.addCell(celdaCintura)
+                tabla.addCell(celdaHorasSueno)
 
-            for (i in listaReporteDelMes.indices) {
-                val reporte = listaReporteDelMes[i]
+                for (i in listaReportes.indices) {
+                    val reporte = listaReportes[i]
 
-                val celdaDiaValor = PdfPCell(Phrase(reporte.id.toString()))
-                val celdaPesoValor = PdfPCell(Phrase(reporte.peso))
-                val celdaTiempoEjercicioValor = PdfPCell(Phrase(reporte.tiempoejerc))
-                val celdaCinturaValor = PdfPCell(Phrase(reporte.cintura))
-                val celdaHorasSuenoValor = PdfPCell(Phrase(reporte.horassueno))
+                    val celdaDiaValor = PdfPCell(Phrase(reporte.id.toString()))
+                    val celdaPesoValor = PdfPCell(Phrase(reporte.peso))
+                    val celdaTiempoEjercicioValor = PdfPCell(Phrase(reporte.tiempoejerc))
+                    val celdaCinturaValor = PdfPCell(Phrase(reporte.cintura))
+                    val celdaHorasSuenoValor = PdfPCell(Phrase(reporte.horassueno))
 
-                tabla.addCell(celdaDiaValor)
-                tabla.addCell(celdaPesoValor)
-                tabla.addCell(celdaTiempoEjercicioValor)
-                tabla.addCell(celdaCinturaValor)
-                tabla.addCell(celdaHorasSuenoValor)
-            }
+                    tabla.addCell(celdaDiaValor)
+                    tabla.addCell(celdaPesoValor)
+                    tabla.addCell(celdaTiempoEjercicioValor)
+                    tabla.addCell(celdaCinturaValor)
+                    tabla.addCell(celdaHorasSuenoValor)
+                }
 
 
             documento.add(tabla)
+            } else {
+                Log.d("DatosReporte", "La lista de datos está vacía")
+            }
             documento.close()
-            Toast.makeText(this, "PDF creado en ${file.absolutePath}", Toast.LENGTH_LONG).show()
+
+            val uri:Uri = file.uri
+            val share = Intent()
+            share.action = Intent.ACTION_SEND
+            share.type = "application/pdf"
+            share.putExtra(Intent.EXTRA_STREAM, uri)
+            //share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            startActivity(share)
+
+
 
         } catch (e: FileNotFoundException) {
             e.printStackTrace();
@@ -156,31 +214,10 @@ class ReporteDelMes : AppCompatActivity() {
     }
 
     private fun verificarPermisos(view: View) {
-        when {
-            ContextCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                Toast.makeText(this, "PERMISOS CONCEDIDOS", Toast.LENGTH_SHORT).show()
-                crearPDF()
-            }
-
-            ActivityCompat.shouldShowRequestPermissionRationale(
-                this,
-                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) -> {
-                Snackbar.make(
-                    view,
-                    "ESTE PERMISO ES NECESARIO PARA CREAR EL ARCHIVO",
-                    Snackbar.LENGTH_INDEFINITE
-                ).setAction("OK") {
-                    requestPermissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                }.show()
-            }
-            else -> {
-                requestPermissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            }
-        }
-
+        launchBaseDirectoryPicker()
+    }
+    fun launchBaseDirectoryPicker() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        launcher!!.launch(intent)
     }
 }
